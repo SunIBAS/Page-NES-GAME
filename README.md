@@ -1,1 +1,1 @@
-"# Page-NES-GAME" 
+[Enter](./index.html)
