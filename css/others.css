@@ -442,14 +442,21 @@ body {
 }
 #canvas {
     position: fixed ;
-    top: 10px ;
+    /*top: 10px ;*/
     left: 0px ;
     width: 100%;
     height: calc(100vh - 30px) ;
 }
 .tv-hr {
-    width: calc(100vw - 20px) ;
-    height: calc(100vh - 40px) ;
+    /*width: calc(100vw - 20px) ;*/
+    /*height: calc(100vh - 40px) ;*/
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background: antiquewhite;
+    border-radius: 0;
 }
 #cheatscontent {
     cursor: move;

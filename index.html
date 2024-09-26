@@ -6,6 +6,7 @@
     <style>
         body {
             user-select: none;
+            overflow: hidden;
         }
         .list {}
         .page {
@@ -47,18 +48,47 @@
         .item-text {
             text-align: center;
         }
+        /**/
+        .latestItem {
+            padding: 5px 2px;
+            display: flex;
+        }
+        .latestItemTitle {
+            box-sizing: border-box;
+            padding-left: 10px;
+            flex: 1;
+        }
+        .latestItemRemove {
+            box-sizing: border-box;
+            padding: 0 10px;
+            color: red;
+            line-height: 50px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .latestItem:hover {
+            background: #26007e;
+        }
+        .latestItem:hover .latestItemTitle {
+            color: #7dfcbe;
+        }
     </style>
+    <script src="./sidebar.js"></script>
 </head>
 <body>
 <div>
     <div class="page" id="page"></div>
-    <div class="list" id="list">
+    <div class="list" id="list"></div>
 
+    <button id="latestCollapseBtnFab" style="margin: 0;position: fixed;right: 20px;bottom: 20px;background: #3F51B5;border: navajowhite;padding: 5px;border-radius: 5px;width: 30px;height: 30px;color: white;cursor: pointer;">L</button>
+    <div id="latest">
+        <h2>最近打开 <button id="latestRefresh">刷新</button><button id="latestCollapseBtn">关闭</button></h2>
+        <div id="latestList"></div>
     </div>
 </div>
 <script>
     window.games = [];
-    window.pageCount = 20;
+    window.pageCount = 15;
     window.initPage = function (page) {
         page = + page;
         let p = window.games.slice(page * window.pageCount,page * window.pageCount + window.pageCount);
@@ -82,8 +112,9 @@
             let img = p[i].img.split('/');
             let nes = p[i].nes.split('/');
             let tid = p[i].url.split('?')[1].split('&').map(_=>_.split('=')).filter(_ => _[0] === 'id')[0][1];
+            const info = JSON.stringify(p[i]).replace(/"/g,'#');
             innerHtml += `
-<div tar="${nes[nes.length - 1]}" tid="${tid}" class="item">
+<div tar="${nes[nes.length - 1]}" tid="${tid}" class="item" info="${info}">
     <div class="item-img-box">
         <img width="auto" height="200px" class="item-img" src='./games/${img[img.length - 1]}'/>
     </div>
@@ -101,6 +132,8 @@
             item.onclick = function () {
                 let tid = this.getAttribute('tid')
                 let nes = this.getAttribute('tar')
+                let info = this.getAttribute('info')
+                window.storage.addLatest(JSON.parse(info.replace(/#/g, '"')));
                 console.log(`./runGame.html?tid=${tid}&nes=${nes}`);
                 window.open(`./runGame.html?tid=${tid}&nes=${nes}`);
             };
@@ -114,7 +147,108 @@
                 }
             };
         });
+
+        sidebar.addStyle();
+        sidebar.setEvent("latest", ["latestCollapseBtn", "latestCollapseBtnFab"]);
+        document.getElementById('latestRefresh').onclick = window.latestShow;
+        latestShow();
     };
+    window.latestShow = function () {
+        const games = window.storage.getLatest();
+        const latestList = document.getElementById('latestList');
+        const html = [];
+        games.forEach((game, index) => {
+            let img = game.img.split('/');
+            let nes = game.nes.split('/');
+            let tid = game.url.split('?')[1].split('&').map(_=>_.split('=')).filter(_ => _[0] === 'id')[0][1];
+            html.push(`
+                <div tar="${nes[nes.length - 1]}" class="latestItem">
+                    <div style="flex: 1;display: flex;" class="latestItemContent" tid="${tid}">
+                        <div style="width: 60px;">
+                            <img style="width: 100%;" src='./games/${img[img.length - 1]}'/>
+                        </div>
+                        <div class="latestItemTitle">${game.name}</div>
+                    </div>
+                    <div class="latestItemRemove" index="${index}">移除</div>
+                </div>`);
+        });
+        latestList.innerHTML = html.join('\r\n');
+        new Array(...latestList.getElementsByClassName('latestItemContent')).forEach(item => {
+            item.onclick = function () {
+                let tid = this.getAttribute('tid');
+                let nes = this.getAttribute('tar');
+                console.log(`./runGame.html?tid=${tid}&nes=${nes}`);
+                window.open(`./runGame.html?tid=${tid}&nes=${nes}`);
+            };
+        });
+        new Array(...latestList.getElementsByClassName('latestItemRemove')).forEach(item => {
+            item.onclick = function () {
+                let index = this.getAttribute('index');
+                window.storage.removeLatest(+index);
+                latestShow();
+            };
+        });
+    };
+    window.storage = (function(storage) {
+        const latestLen = 20;
+        const emptyData = {
+            latest : []
+        }
+        const baseStorage = new (class {
+            constructor(storage) {
+                this.storageName = "_nes_storage_";
+                this.storage = storage;
+                this.data = null;
+                this.getData();
+            }
+            getData() {
+                if (this.data) {
+                    return this.data;
+                }
+                this.data = {};
+                let data = this.storage.getItem(this.storageName);
+                if (data) {
+                    try {
+                        data = JSON.parse(data);
+                    } catch (e) {
+                        data = emptyData;
+                    } finally {
+                        for (let i in data) {
+                            this.data[i] = data[i];
+                        }
+                    }
+                } else {
+                    this.data = emptyData;
+                }
+                return this.data;
+            }
+            setData() {
+                this.data.latest.splice(latestLen);
+                this.storage.setItem(this.storageName, JSON.stringify(this.data));
+            }
+            addLatest(game) {
+                let repeat = false;
+                this.data.latest.forEach(g => {
+                    repeat |= g.url === game.url
+                });
+                if (!repeat) {
+                    baseStorage.setData();
+                }
+            }
+        })(storage);
+        return {
+            getLatest() {
+                return baseStorage.data.latest;
+            },
+            addLatest(game) {
+                baseStorage.addLatest(game);
+            },
+            removeLatest(index) {
+                baseStorage.data.latest.splice(index, 1);
+                baseStorage.setData();
+            }
+        };
+    })(localStorage)
     window.onload = function () {
         fetch('./games/fc.json').then(_=>_.json()).then(_games => {
             window.games = _games;

@@ -18,9 +18,9 @@
 
 <body>
 <div class="row">
-    <div id="tvhr" class="tv-hr" onclick="start()">
+    <div id="tvhr" class="tv-hr" onclick="startGame()">
         <div id="fullscreenbg" style="position: absolute;background-color:black;z-index:198;display:none"></div>
-        <canvas id="canvas" class="nes-screen" width="598" height="448" style="width:100%;position: absolute;image-rendering: pixelated;image-rendering: optimizespeed;border-radius: 18px;"></canvas>
+        <canvas id="canvas" class="nes-screen" width="598" height="448" style="width:100%;position: absolute;image-rendering: pixelated;image-rendering: optimizespeed;"></canvas>
         <div class="game-loading">
             <div class="loader">
                 <div class="circles">
@@ -57,6 +57,9 @@
     <br>
     <button id="dl_cache" class="btn btn-lg btn-outline" type="button">离线所有记录(包括存档内容)</button>
     <button id="dl_cache_recover" class="btn btn-lg btn-outline" type="button">从文件恢复离线所有记录</button>
+    <br/>
+    <button accesskey="S" class="btn btn-lg btn-outline" onclick="save(10)">快捷保存(ALT+S)</button>
+    <button accesskey="L" class="btn btn-lg btn-outline" onclick="load(10)">快捷读取(ALT+L)</button>
 </div>
 <div class="toggle-opbtn"></div>
 <div class="tenant-model-content" id="cheatscontent" style="display:none;width:300px;background-color: rgb(78, 54, 107);cursor:move;">
@@ -161,6 +164,47 @@
 </script>
 
 <script>
+    // window.gameLoaded = function() {
+    //
+    // };
+    window.to54 = function () {
+        let t = $('#tvhr');
+        let c = $('#canvas');
+        let w = t.width();
+        let h = t.height();
+        let dh = h - w * 4 / 5;
+        let dw = w - h * 5 / 4;
+        if (dh > 0) {
+            c.css({
+                width: '100% ',
+                height: "100%",
+                // top: (dh / 2 + 10) + 'px',
+                left: "0px ",
+            });
+        } else {
+            c.css({
+                width: (h * 5 / 4) + 'px',
+                height: "100%",
+                // top: "10px ",
+                left: (dw / 2) + 'px '
+            });
+        }
+    };
+    window.onresize = (function() {
+        let id = null;
+        return function () {
+            if (id) {
+                clearTimeout(id);
+            }
+            id = setTimeout(window.to54, 500);
+        };
+    })();
+    window.startGame = function () {
+        setTimeout(() => {
+            to54();
+        }, 1000)
+        start();
+    };
     window.loadingObj = (function () {
         let div = document.createElement('div');
         div.style.display = 'none';
@@ -315,13 +359,16 @@
         $('.toggle-opbtn').click(function () {
             $('.opbtn').toggle();
         });
+        setTimeout(() => {
+            $('.opbtn').toggle();
+        }, 5 * 1000);
         $('#full_screen').click(function () {
             let c = $('#canvas');
             c.css({
-                top: "10px ",
-                left: "0px ",
-                width: "100% ",
-                height: "calc(100vh - 30px) ",
+                top: "10px !important",
+                left: "0px  !important",
+                width: "100vw  !important",
+                height: "100vh !important",
             });
         });
         $('#screen54').click(function () {
@@ -334,15 +381,15 @@
             if (dh > 0) {
                 c.css({
                     width: '100% ',
-                    height: (w * 4 / 5) + "px",
-                    top: (dh / 2 + 10) + 'px',
+                    height: "100%",
+                    // top: (dh / 2 + 10) + 'px',
                     left: "0px ",
                 });
             } else {
                 c.css({
                     width: (h * 5 / 4) + 'px',
-                    height: h + 'px',
-                    top: "10px ",
+                    height: "100%",
+                    // top: "10px ",
                     left: (dw / 2) + 'px '
                 });
             }
@@ -370,7 +417,6 @@
             }
             else{
                 $("#keytable").keydown(function(e){
-
                     changeKey(e.key.toUpperCase(),e.keyCode,h+1,l+1);
                 });
             }

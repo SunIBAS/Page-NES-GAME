@@ -2,12 +2,6 @@
     {
       "url": "?&id=4138",
       "img": "./games/empty.jpg",
-      "name": "选择游戏...",
-      "nes": "http://yx.1dly.cn/roms/选择游戏..."
-    },
-    {
-      "url": "?&id=4138",
-      "img": "./games/empty.jpg",
       "name": "超级玛丽",
       "nes": "http://yx.1dly.cn/roms/roms/Super Mario Bros. (JU) (PRG0) [!].nes"
     },
