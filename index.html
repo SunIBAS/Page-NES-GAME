@@ -232,6 +232,7 @@
                     repeat |= g.url === game.url
                 });
                 if (!repeat) {
+                    baseStorage.data.latest.push(game);
                     baseStorage.setData();
                 }
             }
